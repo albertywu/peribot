@@ -14,13 +14,44 @@
 # Author:
 #   Albert Wu <albertywu@gmail.com>
 
-{ getUserIds } = require('./utils')
+{ getUserIds, followUsers, peribotSay } = require('./utils')
 
 module.exports = (robot) ->
-  robot.hear /peribot get user ids (.+)/i, (res) ->
-    userIds = res.match[1].split(',')
-    getUserIds(userIds)
-      .then (userIds) -> res.reply userIds.join(', ')
 
-  robot.hear /orly/, (res) ->
-    res.send sayBye()
+  robot.brain.set('periscope', [])
+
+  robot.hear /peribot2 follow (\S+)/i, (res) ->
+    userName = res.match[1]
+    filtered = robot.brain.get('periscope').filter (u) -> u isnt userName
+    filtered.push userName
+    robot.brain.set 'periscope', filtered
+
+    getUserIds(robot.brain.get('periscope'))
+      .then (userIds) ->
+        res.reply "Started following #{ userName }"
+        followUsers userIds, (tweet) -> peribotSay robot, "#{ tweet.user.screen_name }: #{ tweet.text }", 'general'
+
+
+  robot.hear /peribot2 unfollow (\S+)/i, (res) ->
+    userName = res.match[1]
+    if userName is 'all'
+      robot.brain.set('periscope', [])
+      res.reply "I am no longer following anyone."
+    else
+      filtered = robot.brain.get('periscope').filter (u) -> u isnt userName
+      robot.brain.set 'periscope', filtered
+
+      getUserIds(robot.brain.get('periscope'))
+        .then (userIds) ->
+          res.reply "Unfollowed #{ userName }"
+          followUsers userIds, (tweet) -> peribotSay robot, "#{ tweet.user.screen_name }: #{ tweet.text }", 'general'
+
+
+  robot.hear /peribot2 get user ids (.+)/i, (res) ->
+    userNames = res.match[1].split(',')
+    getUserIds(userNames)
+      .then (
+        (userIds) -> res.reply userIds.join(', ')
+        (err) -> res.reply err
+      )
+
