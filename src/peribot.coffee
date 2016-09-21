@@ -26,11 +26,18 @@ module.exports = (robot) ->
     filtered.push userName
     robot.brain.set 'periscope', filtered
 
+    res.reply "Started following #{ userName }"
     getUserIds(robot.brain.get('periscope'))
       .then (userIds) ->
-        res.reply "Started following #{ userName }"
         followUsers userIds, (tweet) -> peribotSay robot, "#{ tweet.user.screen_name }: #{ tweet.text }", 'general'
 
+  robot.hear /twitter following/i, (res) ->
+    following = robot.brain.get('periscope')
+    res.reply (
+      if following.length > 0
+      then "Following: #{ following.join(', ') }"
+      else "Not following anyone."
+    )
 
   robot.hear /twitter unfollow (\S+)/i, (res) ->
     userName = res.match[1]
@@ -41,9 +48,9 @@ module.exports = (robot) ->
       filtered = robot.brain.get('periscope').filter (u) -> u isnt userName
       robot.brain.set 'periscope', filtered
 
+      res.reply "Unfollowed #{ userName }"
       getUserIds(robot.brain.get('periscope'))
         .then (userIds) ->
-          res.reply "Unfollowed #{ userName }"
           followUsers userIds, (tweet) -> peribotSay robot, "#{ tweet.user.screen_name }: #{ tweet.text }", 'general'
 
 
