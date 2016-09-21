@@ -14,9 +14,13 @@
 # Author:
 #   Albert Wu <albertywu@gmail.com>
 
+{ getUserIds } = require('./utils')
+
 module.exports = (robot) ->
-  robot.respond /hello/, (res) ->
-    res.reply "hello!"
+  robot.hear /peribot get user ids (.+)/i, (res) ->
+    userIds = res.match[1].split(',')
+    getUserIds(userIds)
+      .then (userIds) -> res.reply userIds.join(', ')
 
   robot.hear /orly/, (res) ->
-    res.send "yarly"
+    res.send sayBye()
