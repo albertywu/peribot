@@ -20,7 +20,7 @@ module.exports = (robot) ->
 
   robot.brain.set('periscope', [])
 
-  robot.hear /peribot2 follow (\S+)/i, (res) ->
+  robot.hear /twitter follow (\S+)/i, (res) ->
     userName = res.match[1]
     filtered = robot.brain.get('periscope').filter (u) -> u isnt userName
     filtered.push userName
@@ -32,7 +32,7 @@ module.exports = (robot) ->
         followUsers userIds, (tweet) -> peribotSay robot, "#{ tweet.user.screen_name }: #{ tweet.text }", 'general'
 
 
-  robot.hear /peribot2 unfollow (\S+)/i, (res) ->
+  robot.hear /twitter unfollow (\S+)/i, (res) ->
     userName = res.match[1]
     if userName is 'all'
       robot.brain.set('periscope', [])
@@ -47,7 +47,7 @@ module.exports = (robot) ->
           followUsers userIds, (tweet) -> peribotSay robot, "#{ tweet.user.screen_name }: #{ tweet.text }", 'general'
 
 
-  robot.hear /peribot2 get user ids (.+)/i, (res) ->
+  robot.hear /twitter get user ids (.+)/i, (res) ->
     userNames = res.match[1].split(',')
     getUserIds(userNames)
       .then (
