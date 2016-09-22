@@ -1,7 +1,7 @@
 {
   "name": "hubot-peribot",
   "description": "Subscribe to periscope users, and get notified when they GO LIVE!",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "author": "Albert Wu <albertywu@gmail.com>",
   "license": "MIT",
   "keywords": "periscope, hubot, hubot-scripts, peribot",

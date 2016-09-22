@@ -15,24 +15,28 @@
 #   Albert Wu <albertywu@gmail.com>
 
 { getUserIds, followUsers, peribotSay } = require('./utils')
+{ Brain } = require('./Brain')
 
 module.exports = (robot) ->
 
-  robot.brain.set('periscope', [])
+  # Creates new instance of Brain
+  periscopeUsers = new Brain(robot, 'periscopeUsers')
+
+  robot.hear /twitter clear/, (res) ->
+    res.reply "cleared brain"
+    periscopeUsers.clear()
 
   robot.hear /twitter follow (\S+)/i, (res) ->
     userName = res.match[1]
-    filtered = robot.brain.get('periscope').filter (u) -> u isnt userName
-    filtered.push userName
-    robot.brain.set 'periscope', filtered
+    periscopeUsers.add userName
 
     res.reply "Started following #{ userName }"
-    getUserIds(robot.brain.get('periscope'))
+    getUserIds(periscopeUsers.getAll())
       .then (userIds) ->
         followUsers userIds, (tweet) -> peribotSay robot, "#{ tweet.user.screen_name }: #{ tweet.text }", 'general'
 
   robot.hear /twitter following/i, (res) ->
-    following = robot.brain.get('periscope')
+    following = periscopeUsers.getAll()
     res.reply (
       if following.length > 0
       then "Following: #{ following.join(', ') }"
@@ -42,17 +46,15 @@ module.exports = (robot) ->
   robot.hear /twitter unfollow (\S+)/i, (res) ->
     userName = res.match[1]
     if userName is 'all'
-      robot.brain.set('periscope', [])
+      periscopeUsers.clear()
       res.reply "I am no longer following anyone."
     else
-      filtered = robot.brain.get('periscope').filter (u) -> u isnt userName
-      robot.brain.set 'periscope', filtered
-
+      periscopeUsers.remove userName
       res.reply "Unfollowed #{ userName }"
-      getUserIds(robot.brain.get('periscope'))
+      getUserIds(periscopeUsers.getAll())
         .then (userIds) ->
+          console.log "After twitter unfollow: #{ userIds }"
           followUsers userIds, (tweet) -> peribotSay robot, "#{ tweet.user.screen_name }: #{ tweet.text }", 'general'
-
 
   robot.hear /twitter get user ids (.+)/i, (res) ->
     userNames = res.match[1].split(',')
@@ -61,4 +63,3 @@ module.exports = (robot) ->
         (userIds) -> res.reply userIds.join(', ')
         (err) -> res.reply err
       )
-
